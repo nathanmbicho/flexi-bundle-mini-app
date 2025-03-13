@@ -68,20 +68,20 @@ export default function Home() {
 
     const validityMultipliers: ValidityMultipliers = {
         '1hour': { dataBundles: 0, callMinutes: 0 , sms: 0 }, // Base price
-        '3hours': { dataBundles: 0.25, callMinutes: 0.30, sms: 0.2 },
-        '6hours': { dataBundles: 0.35, callMinutes: 0.60, sms: 0.3  },
-        'midnight': { dataBundles: 0.45, callMinutes: 0.90, sms: 0.4  },
-        '24hours': { dataBundles: 0.55, callMinutes: 1.20, sms: 0.5  },
-        '3days': { dataBundles: 0.65, callMinutes: 1.50, sms: 0.6  },
-        '7days': { dataBundles: 0.75, callMinutes: 1.80, sms: 0.7  },
-        '30days': { dataBundles: 0.85, callMinutes: 2.40, sms: 0.8  }
+        '3hours': { dataBundles: 0.5, callMinutes: 0.3, sms: 0.2 },
+        '6hours': { dataBundles: 0.10, callMinutes: 0.6, sms: 0.3  },
+        'midnight': { dataBundles: 0.15, callMinutes: 0.9, sms: 0.4  },
+        '24hours': { dataBundles: 0.20, callMinutes: 1.2, sms: 0.5  },
+        '3days': { dataBundles: 0.25, callMinutes: 1.5, sms: 0.6  },
+        '7days': { dataBundles: 0.30, callMinutes: 1.8, sms: 0.7  },
+        '30days': { dataBundles: 0.35, callMinutes: 2.4, sms: 0.8  }
     };
 
     const baseRates: BaseRates = {
-        dataBundles: 2, // 2 bob per MB
-        callMinutes: 5, // 5 bob per minute
-        sms: 1.5, // 1 bob per SMS
-        airtime: 1 // 1:1 for airtime
+        airtime: 1, // 1:1 for airtime
+        sms: 0.5, // 0.5  bob per SMS
+        dataBundles: 1.2, // 1.2 bob per MB
+        callMinutes: 1.5 // 1.6 bob per minute
     };
 
     const handleServiceSelection = (service: keyof ServiceSelection): void => {
@@ -138,7 +138,7 @@ export default function Home() {
             total += airtime * baseRates.airtime;
         }
 
-        return total.toFixed(2);
+        return Math.round(total).toFixed(2);
     };
 
     const nextStep = (): void => {
