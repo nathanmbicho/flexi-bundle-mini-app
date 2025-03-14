@@ -152,11 +152,10 @@ export default function Home() {
     const hasSelectedAtLeastOne = Object.values(selectedServices).some(value => value);
 
     const hasFilledRequiredFields = (): boolean => {
-        // Fix the type checking issue
         for (const service in selectedServices) {
             if (
                 selectedServices[service as keyof ServiceSelection] &&
-                service !== 'validity' && // Skip validity check here
+                service !== 'validity' &&
                 (bundleDetails[service as keyof Omit<BundleDetails, 'validity'>] <= 0)
             ) {
                 return false;
@@ -166,273 +165,333 @@ export default function Home() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen bg-green-50">
             <Head>
-                <title>Flexi Bundle Mini App</title>
+                <title>Safaricom Flexi Bundle</title>
                 <meta name="description" content="Create your custom data bundle purchase" />
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
-            <main className="container mx-auto py-10 px-4 max-w-md">
-                <div className="bg-white rounded-lg shadow-lg p-6">
-                    <h1 className="text-2xl font-bold text-center text-indigo-600 mb-6">Flexi Bundle Mini App</h1>
+            {/* Header */}
+            <header className="bg-green-600 text-white py-4 shadow-md">
+                <div className="container mx-auto px-4 flex justify-between items-center">
+                    <div className="flex items-center">
+                        <svg className="w-8 h-8 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 7h18M3 12h18M3 17h12" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                        <h1 className="text-xl font-bold">M-PESA</h1>
+                    </div>
+                </div>
+            </header>
 
-                    {/* Progress Bar */}
-                    <div className="mb-8">
-                        <div className="flex justify-between mb-2">
-                            {[1, 2, 3].map((stepNumber) => (
-                                <div
-                                    key={stepNumber}
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center 
-                    ${step === stepNumber
-                                        ? 'bg-indigo-600 text-white'
-                                        : step > stepNumber
-                                            ? 'bg-green-500 text-white'
-                                            : 'bg-gray-200 text-gray-700'}`}
-                                >
-                                    {step > stepNumber ? '✓' : stepNumber}
-                                </div>
-                            ))}
-                        </div>
-                        <div className="overflow-hidden h-2 rounded-full bg-gray-200">
-                            <div
-                                className="h-full bg-indigo-600 transition-all duration-300"
-                                style={{ width: `${(step - 1) * 50}%` }}
-                            ></div>
-                        </div>
+            <main className="container mx-auto py-6 px-4 max-w-md">
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+                    {/* Title Bar */}
+                    <div className="bg-green-600 text-white py-3 px-4">
+                        <h2 className="text-lg font-semibold text-center">Flexi Bundle</h2>
                     </div>
 
-                    {/* Step 1: Service Selection */}
-                    {step === 1 && (
-                        <div>
-                            <h2 className="text-xl text-black font-semibold mb-4">Select Services</h2>
-                            <p className="text-gray-600 mb-4">Choose the services you want to bundle:</p>
-
-                            <div className="space-y-3">
-                                {(Object.keys(selectedServices) as Array<keyof ServiceSelection>).map((service) => (
-                                    <div key={service} className="flex items-start">
-                                        <div className="flex items-center h-5">
-                                            <input
-                                                id={service}
-                                                type="checkbox"
-                                                checked={selectedServices[service]}
-                                                onChange={() => handleServiceSelection(service)}
-                                                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                                            />
+                    {/* Content */}
+                    <div className="p-5">
+                        {/* Step Indicator */}
+                        <div className="mb-6">
+                            <div className="flex justify-between">
+                                {[1, 2, 3].map((stepNumber) => (
+                                    <div key={stepNumber} className="flex flex-col items-center">
+                                        <div
+                                            className={`w-8 h-8 rounded-full flex items-center justify-center border-2 
+                                            ${step === stepNumber
+                                                ? 'border-green-600 bg-green-600 text-white'
+                                                : step > stepNumber
+                                                    ? 'border-green-600 bg-green-100 text-green-600'
+                                                    : 'border-gray-300 bg-gray-100 text-gray-500'}`}
+                                        >
+                                            {step > stepNumber ? '✓' : stepNumber}
                                         </div>
-                                        <div className="ml-3 text-sm">
-                                            <label htmlFor={service} className="font-medium text-gray-700 capitalize">
-                                                {service === 'dataBundles' ? 'Data Bundles' :
-                                                    service === 'callMinutes' ? 'Call Minutes' :
-                                                        service === 'sms' ? 'SMS' : 'Airtime'}
-                                            </label>
-                                        </div>
+                                        <span className={`text-xs mt-1 ${step >= stepNumber ? 'text-green-600' : 'text-gray-500'}`}>
+                                            {stepNumber === 1 ? 'Select' : stepNumber === 2 ? 'Details' : 'Confirm'}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
-
-                            <div className="mt-8 flex justify-end">
-                                <button
-                                    onClick={nextStep}
-                                    disabled={!hasSelectedAtLeastOne}
-                                    className={`px-4 py-2 rounded-md ${
-                                        hasSelectedAtLeastOne
-                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    }`}
-                                >
-                                    Next
-                                </button>
+                            <div className="mt-2 overflow-hidden h-1 rounded-full bg-gray-200">
+                                <div
+                                    className="h-full bg-green-600 transition-all duration-300"
+                                    style={{ width: `${(step - 1) * 50}%` }}
+                                ></div>
                             </div>
                         </div>
-                    )}
 
-                    {/* Step 2: Bundle Details */}
-                    {step === 2 && (
-                        <div>
-                            <h2 className="text-xl text-black font-semibold mb-4">Bundle Details</h2>
-                            <p className="text-gray-600 mb-4">Enter the amount for each service:</p>
+                        {/* Step 1: Service Selection */}
+                        {step === 1 && (
+                            <div>
+                                <h3 className="text-green-700 font-bold mb-4">Select Services</h3>
+                                <p className="text-gray-600 mb-4 text-sm">Choose what you want to include in your bundle:</p>
 
-                            <div className="space-y-4">
-                                {selectedServices.dataBundles && (
-                                    <div>
-                                        <label htmlFor="dataBundles" className="block text-sm font-medium text-gray-700">
-                                            Data Bundles (MBs)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            id="dataBundles"
-                                            min="0"
-                                            value={bundleDetails.dataBundles}
-                                            onChange={(e) => handleBundleDetailsChange('dataBundles', e.target.value)}
-                                            className="mt-1 block text-black w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        />
-                                    </div>
-                                )}
+                                <div className="space-y-3">
+                                    {(Object.keys(selectedServices) as Array<keyof ServiceSelection>).map((service) => (
+                                        <div key={service}
+                                             className={`flex items-center p-3 border rounded-lg ${
+                                                 selectedServices[service] ? 'border-green-500 bg-green-50' : 'border-gray-200'
+                                             }`}
+                                             onClick={() => handleServiceSelection(service)}
+                                        >
+                                            <div className={`w-5 h-5 flex-shrink-0 rounded border ${
+                                                selectedServices[service] ? 'bg-green-600 border-green-600' : 'border-gray-300'
+                                            } flex items-center justify-center mr-3`}>
+                                                {selectedServices[service] && (
+                                                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <span className="font-medium text-gray-800 capitalize">
+                                                    {service === 'dataBundles' ? 'Data Bundles' :
+                                                        service === 'callMinutes' ? 'Call Minutes' :
+                                                            service === 'sms' ? 'SMS' : 'Airtime'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
 
-                                {selectedServices.callMinutes && (
-                                    <div>
-                                        <label htmlFor="callMinutes" className="block text-sm font-medium text-gray-700">
-                                            Call Minutes
-                                        </label>
-                                        <input
-                                            type="number"
-                                            id="callMinutes"
-                                            min="0"
-                                            value={bundleDetails.callMinutes}
-                                            onChange={(e) => handleBundleDetailsChange('callMinutes', e.target.value)}
-                                            className="mt-1 text-black block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        />
-                                    </div>
-                                )}
-
-                                {selectedServices.sms && (
-                                    <div>
-                                        <label htmlFor="sms" className="block text-sm font-medium text-gray-700">
-                                            SMS Count
-                                        </label>
-                                        <input
-                                            type="number"
-                                            id="sms"
-                                            min="0"
-                                            value={bundleDetails.sms}
-                                            onChange={(e) => handleBundleDetailsChange('sms', e.target.value)}
-                                            className="mt-1 block text-black w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        />
-                                    </div>
-                                )}
-
-                                {selectedServices.airtime && (
-                                    <div>
-                                        <label htmlFor="airtime" className="block text-sm font-medium text-gray-700">
-                                            Airtime (KSh)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            id="airtime"
-                                            min="0"
-                                            value={bundleDetails.airtime}
-                                            onChange={(e) => handleBundleDetailsChange('airtime', e.target.value)}
-                                            className="mt-1 block text-black w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        />
-                                    </div>
-                                )}
-
-                                <div>
-                                    <label htmlFor="validity" className="block text-sm font-medium text-gray-700">
-                                        Bundle Validity
-                                    </label>
-                                    <select
-                                        id="validity"
-                                        value={bundleDetails.validity}
-                                        onChange={(e) => handleValidityChange(e.target.value)}
-                                        className="mt-1 block text-black w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                <div className="mt-8">
+                                    <button
+                                        onClick={nextStep}
+                                        disabled={!hasSelectedAtLeastOne}
+                                        className={`w-full py-3 rounded-lg font-medium text-center ${
+                                            hasSelectedAtLeastOne
+                                                ? 'bg-green-600 text-white'
+                                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        }`}
                                     >
-                                        <option value="">Select validity period</option>
-                                        {validityOptions.map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        Next
+                                    </button>
                                 </div>
                             </div>
+                        )}
 
-                            <div className="mt-8 flex justify-between">
-                                <button
-                                    onClick={prevStep}
-                                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                                >
-                                    Back
-                                </button>
-                                <button
-                                    onClick={nextStep}
-                                    disabled={!hasFilledRequiredFields()}
-                                    className={`px-4 py-2 rounded-md ${
-                                        hasFilledRequiredFields()
-                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    }`}
-                                >
-                                    Next
-                                </button>
+                        {/* Step 2: Bundle Details */}
+                        {step === 2 && (
+                            <div>
+                                <h3 className="text-green-700 font-bold mb-4">Bundle Details</h3>
+                                <p className="text-gray-600 mb-4 text-sm">Enter the amount for each service:</p>
+
+                                <div className="space-y-4">
+                                    {selectedServices.dataBundles && (
+                                        <div>
+                                            <label htmlFor="dataBundles" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Data Bundles (MBs)
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    id="dataBundles"
+                                                    min="0"
+                                                    value={bundleDetails.dataBundles}
+                                                    onChange={(e) => handleBundleDetailsChange('dataBundles', e.target.value)}
+                                                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm text-black focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                                />
+                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                                    <span className="text-gray-500">MB</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedServices.callMinutes && (
+                                        <div>
+                                            <label htmlFor="callMinutes" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Call Minutes
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    id="callMinutes"
+                                                    min="0"
+                                                    value={bundleDetails.callMinutes}
+                                                    onChange={(e) => handleBundleDetailsChange('callMinutes', e.target.value)}
+                                                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm text-black focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                                />
+                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                                    <span className="text-gray-500">mins</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedServices.sms && (
+                                        <div>
+                                            <label htmlFor="sms" className="block text-sm font-medium text-gray-700 mb-1">
+                                                SMS Count
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    id="sms"
+                                                    min="0"
+                                                    value={bundleDetails.sms}
+                                                    onChange={(e) => handleBundleDetailsChange('sms', e.target.value)}
+                                                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm text-black focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                                />
+                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                                    <span className="text-gray-500">SMS</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedServices.airtime && (
+                                        <div>
+                                            <label htmlFor="airtime" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Airtime (KSh)
+                                            </label>
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                    <span className="text-gray-500">KSh</span>
+                                                </div>
+                                                <input
+                                                    type="number"
+                                                    id="airtime"
+                                                    min="0"
+                                                    value={bundleDetails.airtime}
+                                                    onChange={(e) => handleBundleDetailsChange('airtime', e.target.value)}
+                                                    className="block w-full pl-12 px-3 py-3 border border-gray-300 rounded-lg shadow-sm text-black focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label htmlFor="validity" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Bundle Validity
+                                        </label>
+                                        <select
+                                            id="validity"
+                                            value={bundleDetails.validity}
+                                            onChange={(e) => handleValidityChange(e.target.value)}
+                                            className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm text-black focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none bg-white"
+                                        >
+                                            <option value="">Select validity period</option>
+                                            {validityOptions.map((option) => (
+                                                <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 space-y-3">
+                                    <button
+                                        onClick={nextStep}
+                                        disabled={!hasFilledRequiredFields()}
+                                        className={`w-full py-3 rounded-lg font-medium text-center ${
+                                            hasFilledRequiredFields()
+                                                ? 'bg-green-600 text-white'
+                                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        }`}
+                                    >
+                                        Next
+                                    </button>
+                                    <button
+                                        onClick={prevStep}
+                                        className="w-full py-3 rounded-lg font-medium text-center border border-gray-300 text-gray-700"
+                                    >
+                                        Back
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {/* Step 3: Confirmation */}
-                    {step === 3 && (
-                        <div>
-                            <h2 className="text-xl text-black font-semibold mb-4">Confirm Your Bundle</h2>
+                        {/* Step 3: Confirmation */}
+                        {step === 3 && (
+                            <div>
+                                <h3 className="text-green-700 font-bold mb-4">Confirm Your Bundle</h3>
 
-                            <div className="bg-gray-50 p-4 rounded-md space-y-5 mb-6">
-                                <h3 className="font-semibold text-gray-600 text-center text-sm uppercase">Bundle Summary:</h3>
+                                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-4 mb-6">
+                                    <div className="text-center">
+                                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Bundle Summary</span>
+                                    </div>
 
-                                <div className="space-y-3 text-gray-700">
                                     {selectedServices.dataBundles && bundleDetails.dataBundles > 0 && (
-                                        <div className="flex justify-between">
-                                            <span>Data:</span>
-                                            <span className="font-medium">{bundleDetails.dataBundles} MB</span>
+                                        <div className="flex justify-between py-2 border-b border-gray-200">
+                                            <span className="text-gray-600">Data</span>
+                                            <span className="font-medium text-gray-800">{bundleDetails.dataBundles} MB</span>
                                         </div>
                                     )}
 
                                     {selectedServices.callMinutes && bundleDetails.callMinutes > 0 && (
-                                        <div className="flex justify-between">
-                                            <span>Call Minutes:</span>
-                                            <span className="font-medium">{bundleDetails.callMinutes} mins</span>
+                                        <div className="flex justify-between py-2 border-b border-gray-200">
+                                            <span className="text-gray-600">Call Minutes</span>
+                                            <span className="font-medium text-gray-800">{bundleDetails.callMinutes} mins</span>
                                         </div>
                                     )}
 
                                     {selectedServices.sms && bundleDetails.sms > 0 && (
-                                        <div className="flex justify-between">
-                                            <span>SMS:</span>
-                                            <span className="font-medium">{bundleDetails.sms} messages</span>
+                                        <div className="flex justify-between py-2 border-b border-gray-200">
+                                            <span className="text-gray-600">SMS</span>
+                                            <span className="font-medium text-gray-800">{bundleDetails.sms} messages</span>
                                         </div>
                                     )}
 
                                     {selectedServices.airtime && bundleDetails.airtime > 0 && (
-                                        <div className="flex justify-between">
-                                            <span>Airtime:</span>
-                                            <span className="font-medium">KSh {bundleDetails.airtime}</span>
+                                        <div className="flex justify-between py-2 border-b border-gray-200">
+                                            <span className="text-gray-600">Airtime</span>
+                                            <span className="font-medium text-gray-800">KSh {bundleDetails.airtime}</span>
                                         </div>
                                     )}
 
-                                    <div className="flex justify-between">
-                                        <span>Validity:</span>
-                                        <span className="font-medium">
-                                          {validityOptions.find(opt => opt.value === bundleDetails.validity)?.label}
+                                    <div className="flex justify-between py-2 border-b border-gray-200">
+                                        <span className="text-gray-600">Validity</span>
+                                        <span className="font-medium text-gray-800">
+                                            {validityOptions.find(opt => opt.value === bundleDetails.validity)?.label}
                                         </span>
                                     </div>
 
-                                    <div className="border-t border-gray-200 pt-2 mt-2">
-                                        <div className="flex justify-between font-semibold">
-                                            <span>Total Amount:</span>
-                                            <span className="text-indigo-600">KSh {calculateTotal()}</span>
+                                    <div className="flex justify-between py-3 bg-green-50 rounded-md px-2">
+                                        <span className="font-semibold text-gray-700">Total Amount</span>
+                                        <span className="font-bold text-green-700">KSh {calculateTotal()}</span>
+                                    </div>
+                                </div>
+
+                                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded">
+                                    <div className="flex">
+                                        <div className="flex-shrink-0">
+                                            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div className="ml-3">
+                                            <p className="text-sm text-yellow-700">
+                                                You will be charged KSh {calculateTotal()} from your M-PESA account
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="mt-8 flex justify-between">
-                                <button
-                                    onClick={prevStep}
-                                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                                >
-                                    Back
-                                </button>
-                                <button
-                                    className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
-                                    onClick={
-                                        () => {
-                                            alert(`Purchase successful! You will be charged KSh ${calculateTotal()}.`)
-                                            window.location.reload();
-                                       }
-                                    }>
-                                    Purchase Bundle
-                                </button>
+                                <div className="mt-6 space-y-3">
+                                    <button
+                                        className="w-full py-3 rounded-lg font-medium text-center bg-green-600 text-white"
+                                        onClick={
+                                            () => {
+                                                alert(`Purchase successful! You will be charged KSh ${calculateTotal()}.`)
+                                                window.location.reload();
+                                            }
+                                        }>
+                                        Confirm and Pay
+                                    </button>
+                                    <button
+                                        onClick={prevStep}
+                                        className="w-full py-3 rounded-lg font-medium text-center border border-gray-300 text-gray-700"
+                                    >
+                                        Back
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </main>
         </div>
