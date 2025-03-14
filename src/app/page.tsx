@@ -1,440 +1,422 @@
 "use client"
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 
-// Define types
-interface ServiceSelection {
+type ServiceOption = 'airtime' | 'dataBundles' | 'callMinutes' | 'sms';
+
+interface SelectedOptions {
     airtime: boolean;
     dataBundles: boolean;
     callMinutes: boolean;
     sms: boolean;
 }
 
-interface BundleDetails {
+interface ValidityOption {
+    id: string;
+    label: string;
+    mbsRate: number;
+    minutesRate: number;
+    smsRate: number;
+    airtimeRate: number;
+}
+
+interface BundleResult {
     airtime: number;
     dataBundles: number;
     callMinutes: number;
     sms: number;
     validity: string;
-}
-
-interface ValidityOption {
-    value: string;
-    label: string;
-}
-
-interface ValidityMultipliers {
-    [key: string]: {
-        dataBundles: number;
-        callMinutes: number;
-        sms: number;
-    };
-}
-
-interface BaseRates {
-    dataBundles: number;
-    callMinutes: number;
-    sms: number;
-    airtime: number;
+    validityLabel: string;
 }
 
 export default function Home() {
-    const [step, setStep] = useState<number>(1);
-    const [selectedServices, setSelectedServices] = useState<ServiceSelection>({
+    const [step, setStep] = useState(1);
+    const [amount, setAmount] = useState<number>(100);
+    const [selectedOptions, setSelectedOptions] = useState<SelectedOptions>({
         airtime: false,
         dataBundles: false,
         callMinutes: false,
         sms: false
     });
 
-    const [bundleDetails, setBundleDetails] = useState<BundleDetails>({
+    const [results, setResults] = useState<BundleResult>({
         airtime: 0,
         dataBundles: 0,
         callMinutes: 0,
         sms: 0,
-        validity: ''
+        validity: '',
+        validityLabel: ''
     });
 
     const validityOptions: ValidityOption[] = [
-        { value: '1hour', label: 'Valid for 1 hour' },
-        { value: '3hours', label: 'Valid for 3 hours' },
-        { value: '6hours', label: 'Valid for 6 hours' },
-        { value: 'midnight', label: 'Valid till Midnight' },
-        { value: '24hours', label: 'Valid for 24hrs' },
-        { value: '3days', label: 'Valid for 3 days' },
-        { value: '7days', label: 'Valid for 7 Days' },
-        { value: '30days', label: 'Valid for 30 days' }
+        { id: '1hour', label: 'Valid for 1 hour', mbsRate: 1, minutesRate: 1, smsRate: 1, airtimeRate: 1 },
+        { id: '3hours', label: 'Valid for 3 hours', mbsRate: 1.25, minutesRate: 1.3, smsRate: 1.2, airtimeRate: 1.1 },
+        { id: '6hours', label: 'Valid for 6 hours', mbsRate: 1.5, minutesRate: 1.6, smsRate: 1.4, airtimeRate: 1.2 },
+        { id: 'midnight', label: 'Valid till Midnight', mbsRate: 1.75, minutesRate: 1.9, smsRate: 1.6, airtimeRate: 1.3 },
+        { id: '24hrs', label: 'Valid for 24hrs', mbsRate: 2, minutesRate: 2.2, smsRate: 1.8, airtimeRate: 1.4 },
+        { id: '3days', label: 'Valid for 3 days', mbsRate: 2.5, minutesRate: 2.8, smsRate: 2.2, airtimeRate: 1.6 },
+        { id: '7days', label: 'Valid for 7 Days', mbsRate: 3, minutesRate: 3.5, smsRate: 2.7, airtimeRate: 1.8 },
+        { id: '30days', label: 'Valid for 30 days', mbsRate: 4, minutesRate: 5, smsRate: 3.5, airtimeRate: 2 }
     ];
 
-    const validityMultipliers: ValidityMultipliers = {
-        '1hour': { dataBundles: 0, callMinutes: 0 , sms: 0 }, // Base price
-        '3hours': { dataBundles: 0.5, callMinutes: 0.3, sms: 0.2 },
-        '6hours': { dataBundles: 0.10, callMinutes: 0.6, sms: 0.3  },
-        'midnight': { dataBundles: 0.15, callMinutes: 0.9, sms: 0.4  },
-        '24hours': { dataBundles: 0.20, callMinutes: 1.2, sms: 0.5  },
-        '3days': { dataBundles: 0.25, callMinutes: 1.5, sms: 0.6  },
-        '7days': { dataBundles: 0.30, callMinutes: 1.8, sms: 0.7  },
-        '30days': { dataBundles: 0.35, callMinutes: 2.4, sms: 0.8  }
+    // Base rates for each service
+    const baseRates = {
+        dataBundles: 2, // 2 bob per MB
+        callMinutes: 5, // 5 bob per minute
+        sms: 1,         // 1 bob per SMS
+        airtime: 1      // 1:1 for airtime
     };
 
-    const baseRates: BaseRates = {
-        airtime: 1, // 1:1 for airtime
-        sms: 0.5, // 0.5  bob per SMS
-        dataBundles: 1.2, // 1.2 bob per MB
-        callMinutes: 1.5 // 1.6 bob per minute
+    // Calculate what the user will get for their money
+    useEffect(() => {
+        if (step === 2) {
+            findOptimalBundle();
+        }
+    }, [step, selectedOptions, amount]);
+
+    const findOptimalBundle = () => {
+        // Count how many services were selected
+        const selectedServiceCount = Object.values(selectedOptions).filter(Boolean).length;
+        if (selectedServiceCount === 0) return;
+
+        // Divide the amount equally among selected services
+        const amountPerService = amount / selectedServiceCount;
+
+        // Try each validity period and find the one that gives the best overall value
+        let bestResult: BundleResult = {
+            airtime: 0,
+            dataBundles: 0,
+            callMinutes: 0,
+            sms: 0,
+            validity: '',
+            validityLabel: ''
+        };
+
+        let bestScore = 0;
+
+        validityOptions.forEach(validityOption => {
+            // Calculate what each service gets with this validity
+            const tempResult: BundleResult = {
+                airtime: 0,
+                dataBundles: 0,
+                callMinutes: 0,
+                sms: 0,
+                validity: validityOption.id,
+                validityLabel: validityOption.label
+            };
+
+            if (selectedOptions.dataBundles) {
+                // Calculate MBs (round down to nearest 10)
+                const mbs = Math.floor((amountPerService / (baseRates.dataBundles * validityOption.mbsRate)) / 10) * 10;
+                tempResult.dataBundles = mbs;
+            }
+
+            if (selectedOptions.callMinutes) {
+                // Calculate minutes (round down to nearest 10)
+                const minutes = Math.floor((amountPerService / (baseRates.callMinutes * validityOption.minutesRate)) / 10) * 10;
+                tempResult.callMinutes = minutes;
+            }
+
+            if (selectedOptions.sms) {
+                // Calculate SMS (round down to nearest 10)
+                const smsCount = Math.floor((amountPerService / (baseRates.sms * validityOption.smsRate)) / 10) * 10;
+                tempResult.sms = smsCount;
+            }
+
+            if (selectedOptions.airtime) {
+                // Calculate airtime (round down to nearest 10)
+                const airtimeAmount = Math.floor((amountPerService / validityOption.airtimeRate) / 10) * 10;
+                tempResult.airtime = airtimeAmount;
+            }
+
+            // Score this result - we want to maximize units per shilling but also consider longer validity
+            // This scoring approach favors combinations that give more value
+            const validityMultiplier = {
+                '1hour': 0.5,
+                '3hours': 0.6,
+                '6hours': 0.7,
+                'midnight': 0.8,
+                '24hrs': 0.9,
+                '3days': 1.0,
+                '7days': 1.1,
+                '30days': 1.2
+            }[validityOption.id] || 1;
+
+            // Calculate score based on normalized service values and validity
+            const mbsValue = tempResult.dataBundles / baseRates.dataBundles;
+            const minutesValue = tempResult.callMinutes / baseRates.callMinutes;
+            const smsValue = tempResult.sms / baseRates.sms;
+            const airtimeValue = tempResult.airtime / baseRates.airtime;
+
+            // Calculate total service value, accounting for which services were selected
+            let totalValue = 0;
+            let serviceCount = 0;
+
+            if (selectedOptions.dataBundles) {
+                totalValue += mbsValue;
+                serviceCount++;
+            }
+
+            if (selectedOptions.callMinutes) {
+                totalValue += minutesValue;
+                serviceCount++;
+            }
+
+            if (selectedOptions.sms) {
+                totalValue += smsValue;
+                serviceCount++;
+            }
+
+            if (selectedOptions.airtime) {
+                totalValue += airtimeValue;
+                serviceCount++;
+            }
+
+            // Average value per service, weighted by validity
+            const score = (totalValue / serviceCount) * validityMultiplier;
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestResult = { ...tempResult };
+            }
+        });
+
+        setResults(bestResult);
     };
 
-    const handleServiceSelection = (service: keyof ServiceSelection): void => {
-        setSelectedServices({
-            ...selectedServices,
-            [service]: !selectedServices[service]
+    const handleCheckboxChange = (option: ServiceOption) => {
+        setSelectedOptions({
+            ...selectedOptions,
+            [option]: !selectedOptions[option]
         });
     };
 
-    const handleBundleDetailsChange = (service: keyof BundleDetails, value: string): void => {
-        setBundleDetails({
-            ...bundleDetails,
-            [service]: parseInt(value) || 0
-        });
+    const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = parseInt(e.target.value) || 0;
+        setAmount(value);
     };
 
-    const handleValidityChange = (validity: string): void => {
-        setBundleDetails({
-            ...bundleDetails,
-            validity
-        });
-    };
+    const handleNext = () => {
+        // Check if amount is entered and at least one option is selected
+        if (step === 1) {
+            if (amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
 
-    const calculateTotal = (): string => {
-        const { dataBundles, callMinutes, sms, airtime, validity } = bundleDetails;
-
-        if (!validity) {
-            return '0.00';
+            if (!Object.values(selectedOptions).some(value => value)) {
+                alert('Please select at least one service');
+                return;
+            }
         }
 
-        const multipliers = validityMultipliers[validity];
-
-        let total = 0;
-
-        if (selectedServices.dataBundles && dataBundles > 0) {
-            const basePrice = dataBundles * baseRates.dataBundles;
-            const additionalCost = basePrice * multipliers.dataBundles;
-            total += basePrice + additionalCost;
+        // Find the optimal bundle before proceeding to step 2
+        if (step === 1) {
+            findOptimalBundle();
         }
 
-        if (selectedServices.callMinutes && callMinutes > 0) {
-            const basePrice = callMinutes * baseRates.callMinutes;
-            const additionalCost = basePrice * multipliers.callMinutes;
-            total += basePrice + additionalCost;
-        }
-
-        if (selectedServices.sms && sms > 0) {
-            const basePrice = sms * baseRates.sms;
-            const additionalCost = basePrice * multipliers.sms;
-            total += basePrice + additionalCost;
-        }
-
-        if (selectedServices.airtime && airtime > 0) {
-            total += airtime * baseRates.airtime;
-        }
-
-        return Math.round(total).toFixed(2);
-    };
-
-    const nextStep = (): void => {
         setStep(step + 1);
     };
 
-    const prevStep = (): void => {
+    const handleBack = () => {
         setStep(step - 1);
     };
 
-    const hasSelectedAtLeastOne = Object.values(selectedServices).some(value => value);
-
-    const hasFilledRequiredFields = (): boolean => {
-        // Fix the type checking issue
-        for (const service in selectedServices) {
-            if (
-                selectedServices[service as keyof ServiceSelection] &&
-                service !== 'validity' && // Skip validity check here
-                (bundleDetails[service as keyof Omit<BundleDetails, 'validity'>] <= 0)
-            ) {
-                return false;
-            }
-        }
-        return bundleDetails.validity !== '';
-    };
-
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen bg-gray-50">
             <Head>
                 <title>Flexi Bundle Mini App</title>
-                <meta name="description" content="Create your custom data bundle purchase" />
-                <link rel="icon" href="/favicon.ico" />
+                <meta name="description" content="Create your own custom budget bundle" />
             </Head>
 
-            <main className="container mx-auto py-10 px-4 max-w-md">
-                <div className="bg-white rounded-lg shadow-lg p-6">
-                    <h1 className="text-2xl font-bold text-center text-indigo-600 mb-6">Flexi Bundle Mini App</h1>
+            <main className="max-w-md mx-auto py-12 px-4">
+                <div className="bg-white rounded-lg shadow p-6">
+                    <h1 className="text-2xl font-bold text-center text-purple-700 mb-6">Flexi Bundle Budget Plan</h1>
 
-                    {/* Progress Bar */}
-                    <div className="mb-8">
-                        <div className="flex justify-between mb-2">
-                            {[1, 2, 3].map((stepNumber) => (
-                                <div
-                                    key={stepNumber}
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center 
-                    ${step === stepNumber
-                                        ? 'bg-indigo-600 text-white'
-                                        : step > stepNumber
-                                            ? 'bg-green-500 text-white'
-                                            : 'bg-gray-200 text-gray-700'}`}
-                                >
-                                    {step > stepNumber ? '✓' : stepNumber}
+                    {/* Progress indicator */}
+                    <div className="flex items-center justify-around mb-8">
+                        {[1, 2].map((stepNumber) => (
+                            <div key={stepNumber} className="flex flex-col items-center">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                    step >= stepNumber ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'
+                                }`}>
+                                    {stepNumber}
                                 </div>
-                            ))}
-                        </div>
-                        <div className="overflow-hidden h-2 rounded-full bg-gray-200">
-                            <div
-                                className="h-full bg-indigo-600 transition-all duration-300"
-                                style={{ width: `${(step - 1) * 50}%` }}
-                            ></div>
-                        </div>
+                                <span className="text-xs mt-1">
+                                  {stepNumber === 1 ? 'Configure' : 'Results'}
+                                </span>
+                            </div>
+                        ))}
                     </div>
 
-                    {/* Step 1: Service Selection */}
+                    {/* Step 1: Configure Amount and Services */}
                     {step === 1 && (
                         <div>
-                            <h2 className="text-xl text-black font-semibold mb-4">Select Services</h2>
-                            <p className="text-gray-600 mb-4">Choose the services you want to bundle:</p>
+                            <h2 className="text-lg font-semibold mb-4">Configure Your Bundle</h2>
 
-                            <div className="space-y-3">
-                                {(Object.keys(selectedServices) as Array<keyof ServiceSelection>).map((service) => (
-                                    <div key={service} className="flex items-start">
-                                        <div className="flex items-center h-5">
-                                            <input
-                                                id={service}
-                                                type="checkbox"
-                                                checked={selectedServices[service]}
-                                                onChange={() => handleServiceSelection(service)}
-                                                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                                            />
-                                        </div>
-                                        <div className="ml-3 text-sm">
-                                            <label htmlFor={service} className="font-medium text-gray-700 capitalize">
-                                                {service === 'dataBundles' ? 'Data Bundles' :
-                                                    service === 'callMinutes' ? 'Call Minutes' :
-                                                        service === 'sms' ? 'SMS' : 'Airtime'}
-                                            </label>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    How much do you want to spend? (KSh)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="10"
+                                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    value={amount}
+                                    onChange={handleAmountChange}
+                                />
                             </div>
 
-                            <div className="mt-8 flex justify-end">
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Spend On?
+                                </label>
+
+                                <div className="space-y-3">
+                                    <label className="flex items-center space-x-3">
+                                        <input
+                                            type="checkbox"
+                                            className="form-checkbox h-5 w-5 text-purple-600"
+                                            checked={selectedOptions.airtime}
+                                            onChange={() => handleCheckboxChange('airtime')}
+                                        />
+                                        <span className="text-gray-900">Airtime</span>
+                                    </label>
+
+                                    <label className="flex items-center space-x-3">
+                                        <input
+                                            type="checkbox"
+                                            className="form-checkbox h-5 w-5 text-purple-600"
+                                            checked={selectedOptions.dataBundles}
+                                            onChange={() => handleCheckboxChange('dataBundles')}
+                                        />
+                                        <span className="text-gray-900">Data Bundles</span>
+                                    </label>
+
+                                    <label className="flex items-center space-x-3">
+                                        <input
+                                            type="checkbox"
+                                            className="form-checkbox h-5 w-5 text-purple-600"
+                                            checked={selectedOptions.callMinutes}
+                                            onChange={() => handleCheckboxChange('callMinutes')}
+                                        />
+                                        <span className="text-gray-900">Call Minutes</span>
+                                    </label>
+
+                                    <label className="flex items-center space-x-3">
+                                        <input
+                                            type="checkbox"
+                                            className="form-checkbox h-5 w-5 text-purple-600"
+                                            checked={selectedOptions.sms}
+                                            onChange={() => handleCheckboxChange('sms')}
+                                        />
+                                        <span className="text-gray-900">SMS</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="mt-10">
+
                                 <button
-                                    onClick={nextStep}
-                                    disabled={!hasSelectedAtLeastOne}
-                                    className={`px-4 py-2 rounded-md ${
-                                        hasSelectedAtLeastOne
-                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    }`}
+                                    onClick={handleNext}
+                                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition duration-200"
                                 >
-                                    Next
+                                    Submit
                                 </button>
                             </div>
                         </div>
                     )}
 
-                    {/* Step 2: Bundle Details */}
+                    {/* Step 2: Results */}
                     {step === 2 && (
                         <div>
-                            <h2 className="text-xl text-black font-semibold mb-4">Bundle Details</h2>
-                            <p className="text-gray-600 mb-4">Enter the amount for each service:</p>
+                            <h2 className="text-lg font-semibold mb-4">Your Optimized Bundle</h2>
 
-                            <div className="space-y-4">
-                                {selectedServices.dataBundles && (
-                                    <div>
-                                        <label htmlFor="dataBundles" className="block text-sm font-medium text-gray-700">
-                                            Data Bundles (MBs)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            id="dataBundles"
-                                            min="0"
-                                            value={bundleDetails.dataBundles}
-                                            onChange={(e) => handleBundleDetailsChange('dataBundles', e.target.value)}
-                                            className="mt-1 block text-black w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        />
-                                    </div>
-                                )}
+                            <div className="bg-purple-50 rounded-lg p-4 mb-6">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="font-medium text-purple-800">For KSh {amount}, you&#39;ll get:</h3>
+                                    <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    {results.validityLabel}
+                  </span>
+                                </div>
 
-                                {selectedServices.callMinutes && (
-                                    <div>
-                                        <label htmlFor="callMinutes" className="block text-sm font-medium text-gray-700">
-                                            Call Minutes
-                                        </label>
-                                        <input
-                                            type="number"
-                                            id="callMinutes"
-                                            min="0"
-                                            value={bundleDetails.callMinutes}
-                                            onChange={(e) => handleBundleDetailsChange('callMinutes', e.target.value)}
-                                            className="mt-1 text-black block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        />
-                                    </div>
-                                )}
+                                <div className="space-y-4 text-sm">
+                                    {selectedOptions.dataBundles && (
+                                        <div className="flex items-center">
+                                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-gray-900">{results.dataBundles} MBs</p>
+                                                <p className="text-xs text-gray-500">Data Bundles</p>
+                                            </div>
+                                        </div>
+                                    )}
 
-                                {selectedServices.sms && (
-                                    <div>
-                                        <label htmlFor="sms" className="block text-sm font-medium text-gray-700">
-                                            SMS Count
-                                        </label>
-                                        <input
-                                            type="number"
-                                            id="sms"
-                                            min="0"
-                                            value={bundleDetails.sms}
-                                            onChange={(e) => handleBundleDetailsChange('sms', e.target.value)}
-                                            className="mt-1 block text-black w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        />
-                                    </div>
-                                )}
+                                    {selectedOptions.callMinutes && (
+                                        <div className="flex items-center">
+                                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-gray-900">{results.callMinutes} Minutes</p>
+                                                <p className="text-xs text-gray-500">Call Minutes</p>
+                                            </div>
+                                        </div>
+                                    )}
 
-                                {selectedServices.airtime && (
-                                    <div>
-                                        <label htmlFor="airtime" className="block text-sm font-medium text-gray-700">
-                                            Airtime (KSh)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            id="airtime"
-                                            min="0"
-                                            value={bundleDetails.airtime}
-                                            onChange={(e) => handleBundleDetailsChange('airtime', e.target.value)}
-                                            className="mt-1 block text-black w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        />
-                                    </div>
-                                )}
+                                    {selectedOptions.sms && (
+                                        <div className="flex items-center">
+                                            <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-gray-900">{results.sms} SMS</p>
+                                                <p className="text-xs text-gray-500">Text Messages</p>
+                                            </div>
+                                        </div>
+                                    )}
 
-                                <div>
-                                    <label htmlFor="validity" className="block text-sm font-medium text-gray-700">
-                                        Bundle Validity
-                                    </label>
-                                    <select
-                                        id="validity"
-                                        value={bundleDetails.validity}
-                                        onChange={(e) => handleValidityChange(e.target.value)}
-                                        className="mt-1 block text-black w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    >
-                                        <option value="">Select validity period</option>
-                                        {validityOptions.map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    {selectedOptions.airtime && (
+                                        <div className="flex items-center">
+                                            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-gray-900">KSh {results.airtime}</p>
+                                                <p className="text-xs text-gray-500">Airtime</p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            <div className="mt-8 flex justify-between">
+                            <div className="mt-6 flex justify-between">
                                 <button
-                                    onClick={prevStep}
-                                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                                    onClick={handleBack}
+                                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md transition duration-200"
                                 >
                                     Back
                                 </button>
                                 <button
-                                    onClick={nextStep}
-                                    disabled={!hasFilledRequiredFields()}
-                                    className={`px-4 py-2 rounded-md ${
-                                        hasFilledRequiredFields()
-                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    }`}
+                                    className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition duration-200"
+                                    onClick={() => alert(`Thank you for your purchase! Your bundle will be activated shortly.`)}
                                 >
-                                    Next
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Step 3: Confirmation */}
-                    {step === 3 && (
-                        <div>
-                            <h2 className="text-xl text-black font-semibold mb-4">Confirm Your Bundle</h2>
-
-                            <div className="bg-gray-50 p-4 rounded-md space-y-5 mb-6">
-                                <h3 className="font-semibold text-gray-600 text-center text-sm uppercase">Bundle Summary:</h3>
-
-                                <div className="space-y-3 text-gray-700">
-                                    {selectedServices.dataBundles && bundleDetails.dataBundles > 0 && (
-                                        <div className="flex justify-between">
-                                            <span>Data:</span>
-                                            <span className="font-medium">{bundleDetails.dataBundles} MB</span>
-                                        </div>
-                                    )}
-
-                                    {selectedServices.callMinutes && bundleDetails.callMinutes > 0 && (
-                                        <div className="flex justify-between">
-                                            <span>Call Minutes:</span>
-                                            <span className="font-medium">{bundleDetails.callMinutes} mins</span>
-                                        </div>
-                                    )}
-
-                                    {selectedServices.sms && bundleDetails.sms > 0 && (
-                                        <div className="flex justify-between">
-                                            <span>SMS:</span>
-                                            <span className="font-medium">{bundleDetails.sms} messages</span>
-                                        </div>
-                                    )}
-
-                                    {selectedServices.airtime && bundleDetails.airtime > 0 && (
-                                        <div className="flex justify-between">
-                                            <span>Airtime:</span>
-                                            <span className="font-medium">KSh {bundleDetails.airtime}</span>
-                                        </div>
-                                    )}
-
-                                    <div className="flex justify-between">
-                                        <span>Validity:</span>
-                                        <span className="font-medium">
-                                          {validityOptions.find(opt => opt.value === bundleDetails.validity)?.label}
-                                        </span>
-                                    </div>
-
-                                    <div className="border-t border-gray-200 pt-2 mt-2">
-                                        <div className="flex justify-between font-semibold">
-                                            <span>Total Amount:</span>
-                                            <span className="text-indigo-600">KSh {calculateTotal()}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-8 flex justify-between">
-                                <button
-                                    onClick={prevStep}
-                                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                                >
-                                    Back
-                                </button>
-                                <button
-                                    className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
-                                    onClick={
-                                        () => {
-                                            alert(`Purchase successful! You will be charged KSh ${calculateTotal()}.`)
-                                            window.location.reload();
-                                       }
-                                    }>
                                     Purchase Bundle
                                 </button>
                             </div>
                         </div>
                     )}
                 </div>
-                <p className="text-center text-sm mt-2">@Prepared By  Group 4</p>
             </main>
         </div>
     );
