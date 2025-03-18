@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Flexi Bundle Mini App -  Group 4",
+  title: "Flexi Bundle Mini App -  By Nate",
   description: "Create your custom data bundle purchase",
 };
 
