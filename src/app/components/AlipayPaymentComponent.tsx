@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 
-// Define types for Alipay responses
 interface AlipaySuccessResponse {
     transactionId?: string;
     [key: string]: unknown;
@@ -13,7 +12,7 @@ interface AlipayFailResponse {
     [key: string]: unknown;
 }
 
-// Define type for AlipayJSBridge
+// AlipayJSBridge
 interface AlipayJSBridge {
     call(
         apiName: string,
@@ -32,7 +31,6 @@ interface AlipayPaymentProps {
     onPaymentFail?: (response: AlipayFailResponse) => void;
 }
 
-// Define a type for the window object with AlipayJSBridge
 declare global {
     interface Window {
         AlipayJSBridge?: AlipayJSBridge;
@@ -41,7 +39,6 @@ declare global {
 
 const AlipayPayment: React.FC<AlipayPaymentProps> = ({
                                                          amount,
-                                                         businessID,
                                                          reason = "Payment",
                                                          onPaymentSuccess,
                                                          onPaymentFail
@@ -50,7 +47,7 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({
     const [paymentStatus, setPaymentStatus] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    // Check if AlipayJSBridge is available
+    // check if AlipayJSBridge is available
     useEffect(() => {
         const checkAlipayBridge = () => {
             if (typeof window !== 'undefined') {
@@ -65,7 +62,7 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({
 
         checkAlipayBridge();
 
-        // Add an event listener for when AlipayJSBridge becomes available
+        // event if AlipayJSBridge is available
         if (typeof document !== 'undefined') {
             document.addEventListener('AlipayJSBridgeReady', checkAlipayBridge);
         }
@@ -87,31 +84,31 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({
         setIsLoading(true);
         setPaymentStatus('processing');
 
-        // Create a reference number from the current date + random digits
+        // create a reference number from the current date plus random digits
         const billReference = `REF${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000)}`;
 
         try {
             window.AlipayJSBridge?.call(
                 'payBill',
                 {
-                    businessID: businessID,
+                    businessID: 89900,
                     billReference: billReference,
                     amount: amount,
-                    currency: 'KES', // Only KES supported currently
+                    currency: 'KES',
                     reason: reason,
                 } as Record<string, unknown>,
                 (res: AlipaySuccessResponse) => {
-                    // Payment success
+                    // payment success
                     console.log('Payment successful', res);
                     setPaymentStatus('success');
                     setIsLoading(false);
 
-                    // Call the success callback if provided
+                    // call the success callback
                     if (onPaymentSuccess) {
                         onPaymentSuccess(res);
                     }
 
-                    // Show a success message with transaction details
+                    // show a success message with transaction details
                     window.AlipayJSBridge?.call(
                         'alert',
                         {
@@ -127,12 +124,12 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({
                     setPaymentStatus('failed');
                     setIsLoading(false);
 
-                    // Call the fail callback if provided
+                    // call the fail callback
                     if (onPaymentFail) {
                         onPaymentFail(res);
                     }
 
-                    // Show an error message
+                    // show an error message
                     window.AlipayJSBridge?.call(
                         'alert',
                         {
@@ -148,7 +145,7 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({
             setPaymentStatus('failed');
             setIsLoading(false);
 
-            // Show error in native alert
+            // show error
             if (window.AlipayJSBridge) {
                 window.AlipayJSBridge.call(
                     'alert',
@@ -169,13 +166,13 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({
             <button
                 onClick={handlePayment}
                 disabled={!isAlipayBridgeAvailable || isLoading}
-                className={`px-6 py-2 rounded-lg font-medium ${
+                className={`w-full py-3 rounded-lg font-medium text-center ${
                     !isAlipayBridgeAvailable || isLoading
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-green-600 text-white hover:bg-green-700'
                 }`}
             >
-                {isLoading ? 'Processing...' : `Pay KES ${amount}`}
+                {isLoading ? 'Processing...' : `Confirm and Pay KES ${amount}`}
             </button>
 
             {paymentStatus === 'processing' && (
@@ -189,7 +186,7 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({
             )}
             {!isAlipayBridgeAvailable && (
                 <p className="mt-2 text-red-600">
-                    AlipayJSBridge is not available. Please ensure you&#39;re using the Alipay Mini Program.
+                    AlipayJSBridge is not available.
                 </p>
             )}
         </div>
