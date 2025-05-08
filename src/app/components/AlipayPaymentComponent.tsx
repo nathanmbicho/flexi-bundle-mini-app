@@ -90,7 +90,7 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({
             window.AlipayJSBridge?.call(
                 'payBill',
                 {
-                    businessID: 89900,
+                    businessID: 12345,
                     billReference: billReference,
                     amount: amount,
                     currency: 'KES',
