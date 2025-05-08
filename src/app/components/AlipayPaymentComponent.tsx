@@ -25,7 +25,6 @@ interface AlipayJSBridge {
 
 interface AlipayPaymentProps {
     amount: string;
-    businessID: string;
     reason?: string;
     onPaymentSuccess?: (response: AlipaySuccessResponse) => void;
     onPaymentFail?: (response: AlipayFailResponse) => void;
