@@ -80,10 +80,9 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
 
         try {
             window.AlipayJSBridge?.call(
-                'payBill',
+                'buyGoods',
                 {
-                    businessID: '1112223',
-                    billReference: '123456789',
+                    tillNumber: '89900',
                     amount: amount,
                     currency: 'KES',
                     reason: "Flexi Bundle Purchase"
@@ -101,7 +100,8 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
                             title: 'Success',
                             content: `Payment successful!\nTransaction ID: ${res.transactionId || 'N/A'}`
                         } as Record<string, unknown>,
-                        () => {}
+                        () => {
+                        }
                     );
                 },
                 (res: AlipayFailResponse) => {
@@ -117,12 +117,11 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
                             title: 'Payment Failed',
                             content: res.message || 'An error occurred during payment'
                         } as Record<string, unknown>,
-                        () => {}
+                        () => {
+                        }
                     );
                 }
             );
-
-            window.location.reload();
         } catch (error) {
             console.error('Payment error:', error);
             setPaymentStatus('failed');
