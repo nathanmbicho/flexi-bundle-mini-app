@@ -76,14 +76,13 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
         setPaymentStatus('processing');
 
         // create a reference number
-        const billReference = `FLEXI${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000)}`;
+        // const billReference = `FLEXI${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000)}`;
 
         try {
             window.AlipayJSBridge?.call(
-                'payBill',
+                'buyGoods',
                 {
-                    businessID: '1112223',
-                    billReference: billReference,
+                    tillNumber: '89900',
                     amount: amount,
                     currency: 'KES',
                     reason: "Flexi Bundle Purchase"
