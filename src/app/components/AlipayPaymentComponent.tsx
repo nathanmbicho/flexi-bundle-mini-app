@@ -82,11 +82,11 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
             window.AlipayJSBridge?.call(
                 'payBill',
                 {
-                    businessID: 1112223,
+                    businessID: '1112223',
                     billReference: billReference,
                     amount: amount,
                     currency: 'KES',
-                    reason: "purchasing flexi bundle"
+                    reason: "Flexi Bundle Purchase"
                 } as Record<string, unknown>,
                 (res: AlipaySuccessResponse) => {
                     // payment success
