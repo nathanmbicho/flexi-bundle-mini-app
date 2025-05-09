@@ -75,7 +75,7 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
         setIsLoading(true);
         setPaymentStatus('processing');
 
-        // create a reference number from the current date plus random digits
+        // create a reference number
         const billReference = `FLEXI${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000)}`;
 
         try {
@@ -121,6 +121,8 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
                     );
                 }
             );
+
+            window.location.reload();
         } catch (error) {
             console.error('Payment error:', error);
             setPaymentStatus('failed');
