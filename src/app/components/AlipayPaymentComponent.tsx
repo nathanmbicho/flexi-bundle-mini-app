@@ -80,9 +80,10 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
 
         try {
             window.AlipayJSBridge?.call(
-                'buyGoods',
+                'payBill',
                 {
-                    tillNumber: '89900',
+                    businessID: '1112223',
+                    billReference: '123456789',
                     amount: amount,
                     currency: 'KES',
                     reason: "Flexi Bundle Purchase"
