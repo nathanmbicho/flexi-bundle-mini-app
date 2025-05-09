@@ -25,9 +25,6 @@ interface AlipayJSBridge {
 
 interface AlipayPaymentProps {
     amount: string;
-    reason?: string;
-    onPaymentSuccess?: (response: AlipaySuccessResponse) => void;
-    onPaymentFail?: (response: AlipayFailResponse) => void;
 }
 
 declare global {
@@ -36,12 +33,7 @@ declare global {
     }
 }
 
-const AlipayPayment: React.FC<AlipayPaymentProps> = ({
-                                                         amount,
-                                                         reason = "Payment",
-                                                         onPaymentSuccess,
-                                                         onPaymentFail
-                                                     }) => {
+const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
     const [isAlipayBridgeAvailable, setIsAlipayBridgeAvailable] = useState<boolean>(false);
     const [paymentStatus, setPaymentStatus] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -84,28 +76,23 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({
         setPaymentStatus('processing');
 
         // create a reference number from the current date plus random digits
-        const billReference = `REF${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000)}`;
+        const billReference = `FLEXI${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000)}`;
 
         try {
             window.AlipayJSBridge?.call(
                 'payBill',
                 {
-                    businessID: 12345,
+                    businessID: 1112223,
                     billReference: billReference,
                     amount: amount,
                     currency: 'KES',
-                    reason: reason,
+                    reason: "purchasing flexi bundle"
                 } as Record<string, unknown>,
                 (res: AlipaySuccessResponse) => {
                     // payment success
                     console.log('Payment successful', res);
                     setPaymentStatus('success');
                     setIsLoading(false);
-
-                    // call the success callback
-                    if (onPaymentSuccess) {
-                        onPaymentSuccess(res);
-                    }
 
                     // show a success message with transaction details
                     window.AlipayJSBridge?.call(
@@ -122,11 +109,6 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({
                     console.log('Payment failed', res);
                     setPaymentStatus('failed');
                     setIsLoading(false);
-
-                    // call the fail callback
-                    if (onPaymentFail) {
-                        onPaymentFail(res);
-                    }
 
                     // show an error message
                     window.AlipayJSBridge?.call(

@@ -41,17 +41,6 @@ interface BaseRates {
     airtime: number;
 }
 
-
-interface AlipaySuccessResponse {
-    transactionId?: string;
-    [key: string]: unknown;
-}
-
-interface AlipayFailResponse {
-    message?: string;
-    [key: string]: unknown;
-}
-
 export default function Home() {
     const [step, setStep] = useState<number>(1);
     const [selectedServices, setSelectedServices] = useState<ServiceSelection>({
@@ -174,18 +163,6 @@ export default function Home() {
             }
         }
         return bundleDetails.validity !== '';
-    };
-
-    const handlePaymentSuccess = (response: AlipaySuccessResponse) => {
-        console.log('Payment was successful!', response);
-
-        alert("Purchase flexi bundle successful!");
-        window.location.reload();
-    };
-
-    const handlePaymentFail = (response: AlipayFailResponse) => {
-        console.log('Payment failed:', response);
-        alert("Payment failed!");
     };
 
     return (
@@ -500,9 +477,6 @@ export default function Home() {
                                 <div className="mt-6 space-y-3">
                                     <AlipayPayment
                                         amount={calculateTotal()}
-                                        reason="purchase flexi bundle"
-                                        onPaymentSuccess={handlePaymentSuccess}
-                                        onPaymentFail={handlePaymentFail}
                                     />
                                     <button
                                         onClick={prevStep}
