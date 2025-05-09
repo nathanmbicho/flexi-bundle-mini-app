@@ -76,14 +76,14 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
         setPaymentStatus('processing');
 
         // create a reference number
-        // const billReference = `FLEXI${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000)}`;
+        const billReference = `FLEXI${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000)}`;
 
         try {
             window.AlipayJSBridge?.call(
-                'buyGoods',
+                'payBill',
                 {
-                    tillNumber: '89900',
-                    amount: amount,
+                    businessID: '1112223',
+                    billReference: billReference,
                     currency: 'KES',
                     reason: "Flexi Bundle Purchase"
                 } as Record<string, unknown>,
@@ -97,10 +97,10 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
                     window.AlipayJSBridge?.call(
                         'alert',
                         {
-                            title: 'Success',
-                            content: `Payment successful!\nTransaction ID: ${res.transactionId || 'N/A'}`
+                            title: `Payment successful!\nTransaction ID: ${res.transactionId || 'N/A'}`
                         } as Record<string, unknown>,
                         () => {
+                            window.location.reload();
                         }
                     );
                 },
@@ -118,6 +118,7 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
                             content: res.message || 'An error occurred during payment'
                         } as Record<string, unknown>,
                         () => {
+                            window.location.reload();
                         }
                     );
                 }
