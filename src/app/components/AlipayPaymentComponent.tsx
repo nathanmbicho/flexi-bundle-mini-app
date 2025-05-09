@@ -100,7 +100,6 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
                             title: `Payment successful!\nTransaction ID: ${res.transactionId || 'N/A'}`
                         } as Record<string, unknown>,
                         () => {
-                            window.location.reload();
                         }
                     );
                 },
@@ -118,7 +117,6 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
                             content: res.message || 'An error occurred during payment'
                         } as Record<string, unknown>,
                         () => {
-                            window.location.reload();
                         }
                     );
                 }
