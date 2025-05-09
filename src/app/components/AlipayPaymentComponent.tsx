@@ -98,7 +98,7 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
                         'alert',
                         {
                             title: 'Success',
-                            content: `Payment successful!\nTransaction ID: ${res.transactionId || 'N/A'}`
+                            content: `Payment successful!\nTransaction ID: ${res.transactionId || 'N/A'}`,
                         } as Record<string, unknown>,
                         () => {}
                     );
@@ -120,8 +120,6 @@ const AlipayPayment: React.FC<AlipayPaymentProps> = ({amount}) => {
                     );
                 }
             );
-
-            window.location.reload();
         } catch (error) {
             console.error('Payment error:', error);
             setPaymentStatus('failed');

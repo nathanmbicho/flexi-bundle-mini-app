@@ -165,6 +165,10 @@ export default function Home() {
         return bundleDetails.validity !== '';
     };
 
+    const resetPage = () => {
+        window.location.reload();
+    }
+
     return (
         <div className="min-h-screen bg-green-50">
             {/* Load the AlipayJSBridge script */}
@@ -176,7 +180,7 @@ export default function Home() {
             </Head>
 
             {/* Header */}
-            <header className="bg-green-600 text-white py-4 shadow-md">
+            <header className="bg-green-600 text-white py-4 shadow-md" onClick={ resetPage }>
                 <div className="container mx-auto px-4 flex justify-between items-center">
                     <div className="flex items-center">
                         <svg className="w-8 h-8 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
